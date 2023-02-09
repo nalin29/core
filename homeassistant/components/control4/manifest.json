@@ -1,12 +1,12 @@
 {
   "domain": "control4",
   "name": "Control4",
-  "codeowners": ["@lawtancool"],
+  "codeowners": ["@nalin29"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/control4",
   "iot_class": "local_polling",
   "loggers": ["pyControl4"],
-  "requirements": ["pyControl4==0.0.6"],
+  "requirements": ["git+https://github.com/kdkavanagh/pyControl4.git#pyControl4==1.0.0b6"],
   "ssdp": [
     {
       "st": "c4:director"

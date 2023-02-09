@@ -1,5 +1,7 @@
 """Provides data updates from the Control4 controller for platforms."""
+from collections import defaultdict
 import logging
+from typing import DefaultDict, Sequence, Union
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
@@ -38,6 +40,32 @@ async def director_update_data(
     return {key["id"]: key for key in data}
 
 
+async def update_variables_for_entity(
+    hass: HomeAssistant, entry: ConfigEntry, variable_names: Sequence[str]
+) -> dict[int, dict[str, Union[bool, int, str, dict]]]:
+    """Retrieve data from the Control4 director for update_coordinator."""
+    try:
+        director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
+        data = await director.getAllItemVariableValue(variable_names)
+        result_dict: DefaultDict[
+            int, dict[str, Union[bool, int, str, dict]]
+        ] = defaultdict(dict)
+        for item in data:
+            typ = item.get("type", None)
+            value = item["value"]
+            if typ == "Boolean":
+                value = bool(int(value))
+            elif typ == "Number":
+                value = float(value)
+
+            result_dict[int(item["id"])][item["varName"]] = value
+        return dict(result_dict)
+    except BadToken:
+        _LOGGER.info("Updating Control4 director token")
+        await refresh_tokens(hass, entry)
+        return await update_variables_for_entity(hass, entry, variable_names)
+
+
 async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     """Store updated authentication and director tokens in hass.data."""
     config = entry.data
@@ -53,7 +81,7 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     director = C4Director(
         config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
     )
-    director_token_expiry = director_token_dict["token_expiration"]
+    director_token_expiry = director_token_dict[CONF_DIRECTOR_TOKEN_EXPIRATION]
 
     _LOGGER.debug("Saving new tokens in hass data")
     entry_data = hass.data[DOMAIN][entry.entry_id]
