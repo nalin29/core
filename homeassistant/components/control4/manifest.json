@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/control4",
   "iot_class": "local_polling",
   "loggers": ["pyControl4"],
-  "requirements": ["pyControl4==0.0.6"],
+  "requirements": ["pyC4API==1.0.1"],
   "ssdp": [
     {
       "st": "c4:director"
