@@ -16,7 +16,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -191,9 +190,9 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             coordinator,
             name,
             idx,
-            device_name=f"Control4 Room - {name}",
-            device_manufacturer="Control4",
-            device_model="Control4 Room",
+            device_name=None,
+            device_manufacturer=None,
+            device_model=None,
             device_id=idx,
         )
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
