@@ -10,13 +10,12 @@ from pyControl4.error_handling import C4Exception
 from pyControl4.room import C4Room
 
 from homeassistant.components.media_player import (
-    MediaPlayerEntity,
-    MediaPlayerState,
-    MediaPlayerEntityFeature,
     MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
     MediaType,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -61,7 +60,7 @@ class _SourceType(enum.Enum):
 
 @attr.s
 class RoomSource:
-    """Error during condition evaluation."""
+    """Room Source Data."""
 
     source_type: set[_SourceType] = attr.ib()
     id: int = attr.ib()
@@ -215,8 +214,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         )
 
     def _create_api_object(self):
-        """
-        Create a pyControl4 device object.
+        """Create a pyControl4 device object.
 
         This exists so the director token used is always the latest one, without needing to re-init the entire entity.
         """
@@ -286,8 +284,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         return MediaType.MUSIC
 
     async def async_media_play_pause(self):
-        """
-        If possible, toggle the current play/pause state.
+        """If possible, toggle the current play/pause state.
 
         Not every source supports play/pause.
         Unfortunately MediaPlayer capabilities are not dynamic,
