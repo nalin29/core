@@ -313,9 +313,12 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         for avail_source in self._sources.values():
             if avail_source.name == source:
                 audio_only = _SourceType.VIDEO not in avail_source.source_type
-                await self._create_api_object().setSource(
-                    avail_source.id, audio_only=audio_only
-                )
+                if audio_only:
+                    await self._create_api_object().setAudioSource(avail_source.id)
+                else:
+                    await self._create_api_object().setVideoAndAudioSource(
+                        avail_source.id
+                    )
                 break
 
         await self.coordinator.async_request_refresh()
