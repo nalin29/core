@@ -47,6 +47,9 @@ VARIABLES_OF_INTEREST = {
     CONTROL4_VOLUME_STATE,
     CONTROL4_MUTED_STATE,
     CONTROL4_PLAYING_AUDIO_DEVICE,
+    CONTROL4_CURRENT_SELECTED_DEVICE,
+    CONTROL4_CURRENT_VIDEO_DEVICE,
+    CONTROL4_CURRENT_AUDIO_DEVICE,
     CONTROL4_PLAYING,
     CONTROL4_PAUSED,
     CONTROL4_STOPPED,
@@ -195,7 +198,6 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             device_model=None,
             device_id=idx,
         )
-        self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
         self._attr_entity_registry_enabled_default = not room_hidden
         self._id_to_parent = id_to_parent
         self._sources = sources
@@ -226,8 +228,37 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
 
         return current_device
 
-    def _get_current_playing_device_id(self) -> int | None:
+    def _get_current_device_id(self) -> int | None:
+        return self._get_device_from_variable(CONTROL4_CURRENT_SELECTED_DEVICE)
+
+    def _get_current_playing_audio_device_id(self) -> int | None:
         return self._get_device_from_variable(CONTROL4_PLAYING_AUDIO_DEVICE)
+
+    def _get_current_audio_device_id(self) -> int | None:
+        return self._get_device_from_variable(CONTROL4_CURRENT_AUDIO_DEVICE)
+
+    def _get_current_video_device_id(self) -> int | None:
+        return self._get_device_from_variable(CONTROL4_CURRENT_VIDEO_DEVICE)
+
+    def _get_current_playing_device_id(self) -> int | None:
+        """Get Current Device.
+
+        First check if the selected device is populated (non-zero) if so
+        then we want to determine if it is an audio or video device. We
+        can check if it matches the current Audio device. If it does then
+        we need to check if there is a current playing audio device. If so
+        then the source is the current playing audio device. Otherwise we
+        can simply return the selected device which may be and audio or video source.
+        """
+        if current_selected_device := self._get_current_device_id():
+            if current_selected_device == self._get_current_audio_device_id():
+                if (
+                    current_playing_audio_device := self._get_current_playing_audio_device_id()
+                ):
+                    return current_playing_audio_device
+            return current_selected_device
+
+        return None
 
     def _get_current_source_state(self) -> str | None:
         current_source = self._get_current_playing_device_id()
@@ -242,6 +273,14 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
                     return MediaPlayerState.ON
             current_source = self._id_to_parent.get(current_source, None)
         return None
+
+    @property
+    def device_class(self) -> MediaPlayerDeviceClass | None:
+        """Return the class of this entity."""
+        for avail_source in self._sources.values():
+            if _SourceType.VIDEO in avail_source.source_type:
+                return MediaPlayerDeviceClass.TV
+        return MediaPlayerDeviceClass.SPEAKER
 
     @property
     def state(self):
@@ -280,6 +319,8 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         current_source = self._get_current_playing_device_id()
         if not current_source:
             return None
+        if current_source == self._get_current_video_device_id():
+            return MediaType.VIDEO
         return MediaType.MUSIC
 
     async def async_media_play_pause(self):
