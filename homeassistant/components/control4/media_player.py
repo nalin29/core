@@ -376,7 +376,10 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
 
     async def async_mute_volume(self, mute):
         """Mute the room."""
-        await self._create_api_object().setMute(mute)
+        if mute:
+            await self._create_api_object().setMuteOn()
+        else:
+            await self._create_api_object().setMuteOff()
         await self.coordinator.async_request_refresh()
 
     async def async_set_volume_level(self, volume):
@@ -386,12 +389,12 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
 
     async def async_volume_up(self):
         """Increase the volume by 1."""
-        await self._create_api_object().setIncrementOrDecrementVolume(increase=True)
+        await self._create_api_object().setIncrementVolume()
         await self.coordinator.async_request_refresh()
 
     async def async_volume_down(self):
         """Decrease the volume by 1."""
-        await self._create_api_object().setIncrementOrDecrementVolume(increase=False)
+        await self._create_api_object().setDecrementVolume()
         await self.coordinator.async_request_refresh()
 
     async def async_media_pause(self):
