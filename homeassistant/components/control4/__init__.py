@@ -30,6 +30,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    API_RETRY_TIMES,
     CONF_ACCOUNT,
     CONF_CONFIG_LISTENER,
     CONF_CONTROLLER_UNIQUE_ID,
@@ -45,8 +46,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.LIGHT, Platform.MEDIA_PLAYER]
-
-API_RETRY_TMES = 5
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -77,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_data[CONF_CONTROLLER_UNIQUE_ID] = controller_unique_id
 
     # Add retry for C4 Account API due to instability
-    for i in range(API_RETRY_TMES):
+    for i in range(API_RETRY_TIMES):
         try:
             director_token_dict = await account.getDirectorBearerToken(
                 controller_unique_id
@@ -85,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             break
         except client_exceptions.ClientError as exception:
             _LOGGER.error("Error connecting to Control4 account API: %s", exception)
-            if i == API_RETRY_TMES - 1:
+            if i == API_RETRY_TIMES - 1:
                 raise ConfigEntryNotReady(exception) from exception
 
     director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
@@ -95,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_data[CONF_DIRECTOR] = director
 
     # Add retry for C4 Account API due to instability
-    for i in range(API_RETRY_TMES):
+    for i in range(API_RETRY_TIMES):
         try:
             # Add Control4 controller to device registry
             controller_href = (await account.getAccountControllers())["href"]
@@ -105,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             break
         except client_exceptions.ClientError as exception:
             _LOGGER.error("Error connecting to Control4 account API: %s", exception)
-            if i == API_RETRY_TMES - 1:
+            if i == API_RETRY_TIMES - 1:
                 raise ConfigEntryNotReady(exception) from exception
 
     _, model, mac_address = controller_unique_id.split("_", 3)
